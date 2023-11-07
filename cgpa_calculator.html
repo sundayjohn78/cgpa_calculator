@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        /* Your CSS styles go here */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .course-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .course-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            transition: background-color 0.3s;
+            cursor: pointer;
+        }
+
+        .course-info {
+            flex-grow: 1;
+        }
+
+        .course-info span {
+            margin-right: 10px;
+        }
+
+        .editable {
+            border: none;
+            background-color: transparent;
+        }
+
+        .delete-button {
+            cursor: pointer;
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CGPA & GPA Calculator</h1>
+        <div class="input-group">
+            <label for="currentGPA">Current GPA:</label>
+            <input type="number" id="currentGPA" step="0.01" placeholder="Enter your current GPA">
+            <button onclick="setCurrentGPA()">
+                <!-- SVG icon for set button -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
+                    <path d="M4.293 11.293l7-7 1.414 1.414-7 7a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414l7-7 1.414 1.414-7 7z"/>
+                    <path fill-rule="evenodd" d="M2 13.5a1.5 1.5 0 001.5 1.5H13a1.5 1.5 0 001.5-1.5V3a1.5 1.5 0 00-1.5-1.5h-3a1 1 0 01-1-1V.5a.5.5 0 00-1 0V1a1 1 0 01-1 1H2.5a.5.5 0 000 1H4a1 1 0 011 1V13.5a.5.5 0 00.5.5h6a.5.5 0 00.5-.5v-3a1 1 0 011-1h1.5a.5.5 0 000-1H13a1.5 1.5 0 001.5-1.5z"/>
+                </svg>
+            </button>
+        </div>
+        <div class="input-group">
+            <label for="courseName">Course Name:</label>
+            <input type="text" id="courseName">
+        </div>
+        <div class="input-group">
+            <label for="grade">Grade:</label>
+            <select id="grade" class="grades">
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+                <option value="D">D</option>
+                <option value="E">E</option>
+                <option value="F">F</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label for="courseUnit">Course Unit:</label>
+            <select id="courseUnit">
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+            </select>
+        </div>
+        <button onclick="addCourse()">
+            <!-- SVG icon for add course button -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
+                <path d="M8 1.5a.5.5 0 01.5.5V8h6.5a.5.5 0 010 1H8v6.5a.5.5 0 01-1 0V9H1.5a.5.5 0 010-1H7V1.5a.5.5 0 01.5-.5z"/>
+            </svg>
+        </button>
+
+        <h2>Course List</h2>
+        <ul class="course-list" id="courseList">
+        </ul>
+
+        <h2>Results</h2>
+        <div>
+            <p>CGPA: <span id="cgpaResult">-</span></p>
+            <p>GPA: <span id="gpaResult">-</span></p>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript code here
+        let currentGPA = null;
+        let courses = [];
+
+        function setCurrentGPA() {
+            currentGPA = parseFloat(document.getElementById('currentGPA').value);
+            calculateCGPA();
+            calculateGPA();
+        }
+
+        function addCourse() {
+            const courseName = document.getElementById('courseName').value;
+            const grade = document.getElementById('grade').value;
+            const courseUnit = parseFloat(document.getElementById('courseUnit').value);
+
+            if (courseName && grade && !isNaN(courseUnit)) {
+                const course = { courseName, grade, courseUnit };
+                courses.push(course);
+                updateCourseList();
+                calculateGPA();
+                calculateCGPA();
+
+                // Clear input fields
+                document.getElementById('courseName').value = '';
+                document.getElementById('grade').value = 'A'; // Reset to 'A' grade
+                document.getElementById('courseUnit').value = '0'; // Reset to '0' course unit
+            }
+        }
+
+        function updateCourseList() {
+            const courseList = document.getElementById('courseList');
+            courseList.innerHTML = '';
+
+            courses.forEach((course, index) => {
+                const listItem = document.createElement('li');
+                listItem.className = 'course-item';
+                listItem.innerHTML = `
+                    <div class="course-info">
+                        <span class="editable" id="editCourseName${index}" contenteditable>${course.courseName}</span>
+                        <select class="editable" id="editGrade${index}">
+                            <option value="A" ${course.grade === 'A' ? 'selected' : ''}>A</option>
+                            <option value="B" ${course.grade === 'B' ? 'selected' : ''}>B</option>
+                            <option value="C" ${course.grade === 'C' ? 'selected' : ''}>C</option>
+                            <option value="D" ${course.grade === 'D' ? 'selected' : ''}>D</option>
+                            <option value="E" ${course.grade === 'E' ? 'selected' : ''}>E</option>
+                            <option value="F" ${course.grade === 'F' ? 'selected' : ''}>F</option>
+                        </select>
+                        <select class="editable" id="editCourseUnit${index}">
+                            <option value="0" ${course.courseUnit === 0 ? 'selected' : ''}>0</option>
+                            <option value="1" ${course.courseUnit === 1 ? 'selected' : ''}>1</option>
+                            <option value="2" ${course.courseUnit === 2 ? 'selected' : ''}>2</option>
+                            <option value="3" ${course.courseUnit === 3 ? 'selected' : ''}>3</option>
+                            <option value="4" ${course.courseUnit === 4 ? 'selected' : ''}>4</option>
+                            <option value="5" ${course.courseUnit === 5 ? 'selected' : ''}>5</option>
+                            <option value="6" ${course.courseUnit === 6 ? 'selected' : ''}>6</option>
+                            <option value="7" ${course.courseUnit === 7 ? 'selected' : ''}>7</option>
+                            <option value="8" ${course.courseUnit === 8 ? 'selected' : ''}>8</option>
+                            <option value="9" ${course.courseUnit === 9 ? 'selected' : ''}>9</option>
+                            <option value="10" ${course.courseUnit === 10 ? 'selected' : ''}>10</option>
+                        </select>
+                    </div>
+                    <button class="delete-button" onclick="deleteCourse(${index})">
+                        <!-- SVG icon for delete button -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                            <path d="M5.5 1a.5.5 0 01.5.5V13a2 2 0 002 2h1a2 2 0 002-2V1.5a.5.5 0 01.5-.5h3a.5.5 0 01.5.5V2h2a1 1 0 011 1v11a2 2 0 01-2 2H2a2 2 0 01-2-2V3a1 1 0 011-1h2V1.5a.5.5 0 01.5-.5zM5 2v12a1 1 0 001 1h1a1 1 0 001-1V2H5z"/>
+                            <path fill-rule="evenodd" d="M8 0a.5.5 0 01.5.5V14a1 1 0 01-1 1 1 1 0 01-1-1V.5a.5.5 0 01.5-.5z"/>
+                        </svg>
+                    </button>
+                `;
+                listItem.onclick = function () {
+                    listItem.classList.toggle('editable');
+                };
+
+                courseList.appendChild(listItem);
+
+                // Add event listeners for editing
+                const editCourseName = document.getElementById(`editCourseName${index}`);
+                const editGrade = document.getElementById(`editGrade${index}`);
+                const editCourseUnit = document.getElementById(`editCourseUnit${index}`);
+
+                editCourseName.addEventListener('input', function () {
+                    course.courseName = editCourseName.textContent;
+                    calculateGPA();
+                    calculateCGPA();
+                });
+
+                editGrade.addEventListener('change', function () {
+                    course.grade = editGrade.value;
+                    calculateGPA();
+                    calculateCGPA();
+                });
+
+                editCourseUnit.addEventListener('change', function () {
+                    course.courseUnit = parseFloat(editCourseUnit.value);
+                    calculateGPA();
+                    calculateCGPA();
+                });
+            });
+        }
+
+        function deleteCourse(index) {
+            courses.splice(index, 1);
+            updateCourseList();
+            calculateGPA();
+            calculateCGPA();
+        }
+
+        function calculateGPA() {
+            const totalQualityPoints = courses.reduce((total, course) => {
+                return total + getGradePoint(course.grade) * course.courseUnit;
+            }, 0);
+
+            const totalCourseUnits = courses.reduce((total, course) => {
+                return total + course.courseUnit;
+            }, 0);
+
+            if (totalCourseUnits > 0) {
+                const gpa = totalQualityPoints / totalCourseUnits;
+                document.getElementById('gpaResult').textContent = gpa.toFixed(2);
+            } else {
+                document.getElementById('gpaResult').textContent = '-';
+            }
+        }
+
+        function calculateCGPA() {
+            if (currentGPA !== null && courses.length > 0) {
+                const totalQualityPoints = courses.reduce((total, course) => {
+                    return total + getGradePoint(course.grade) * course.courseUnit;
+                }, 0);
+
+                const totalCourseUnits = courses.reduce((total, course) => {
+                    return total + course.courseUnit;
+                }, 0);
+
+                if (totalCourseUnits > 0) {
+                    const cgpa = (currentGPA + totalQualityPoints / totalCourseUnits) / 2;
+                    document.getElementById('cgpaResult').textContent = cgpa.toFixed(2);
+                } else {
+                    document.getElementById('cgpaResult').textContent = '-';
+                }
+            }
+        }
+
+        function getGradePoint(grade) {
+            switch (grade) {
+                case 'A':
+                    return 5;
+                case 'B':
+                    return 4;
+                case 'C':
+                    return 3;
+                case 'D':
+                    return 2;
+                case 'E':
+                    return 1;
+                case 'F':
+                    return 0;
+                default:
+                    return 0;
+            }
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
